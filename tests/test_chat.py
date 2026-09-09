@@ -71,6 +71,11 @@ class ChatTests(unittest.TestCase):
    self.assertEqual(r.headers['Service-Worker-Allowed'],'/');self.assertEqual(r.headers['Cache-Control'],'no-cache');sw=r.read().decode();self.assertIn("url.pathname.startsWith('/api/')",sw);self.assertNotIn('GROQ_API_KEY',sw)
   with patch.dict(os.environ,{'GROQ_API_KEY':'DO-NOT-EXPOSE'}):
    result=self.client.request('me');self.assertNotIn('DO-NOT-EXPOSE',json.dumps(result));self.assertTrue(result['integrations']['groqConfigured'])
+ def test_support_one_click_send_to_developer(self):
+  d=self.create();d=self.client.request('chat/'+d['id']+'/handoff',{})
+  d=self.support.request('chat/'+d['id']+'/send-to-dev',{})
+  self.assertEqual(d['status'],'ENVIADA_DESENVOLVIMENTO');self.assertTrue(d['report_reviewed']);self.assertTrue(d['report']['summary'])
+  self.assertTrue(any(item['id']==d['id'] for item in self.dev.request('state')['demands']))
 if __name__=='__main__':
  try:
   result=unittest.main(exit=False).result

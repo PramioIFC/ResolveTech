@@ -19,7 +19,7 @@ DATA=Path(os.environ.get('RESOLVETECH_DATA',str(ROOT/'data'))).resolve()
 DATA.mkdir(parents=True,exist_ok=True); (DATA/'uploads').mkdir(exist_ok=True)
 DB=DATA/'resolvetech.sqlite3'
 STATUSES=['RASCUNHO','AGUARDANDO_ATENDIMENTO','EM_ATENDIMENTO','AGUARDANDO_TRIAGEM','ENVIADA_DESENVOLVIMENTO','EM_ESPERA','EM_ANDAMENTO','CONCLUIDA']
-DEV_STATES=STATUSES[4:]
+DEV_STATES=['ENVIADA_DESENVOLVIMENTO','EM_ESPERA','EM_ANDAMENTO']
 class Problem(Exception):
  def __init__(self,message,status=400): self.message=message; self.status=status
 
@@ -96,7 +96,7 @@ def demand_get(c,id,u):
  d=c.execute('SELECT d.*,u.name client_name,u.email client_email,co.name company_name,f.fields,f.version,i.name issue_name FROM demands d JOIN users u ON u.id=d.client_id JOIN companies co ON co.id=d.company_id JOIN form_versions f ON f.id=d.form_id JOIN issue_types i ON i.id=f.issue_id WHERE d.id=?',(id,)).fetchone()
  if not d: raise Problem('Demanda não encontrada.',404)
  if u['role']=='CLIENT': allowed=d['client_id']==u['id']
- else: allowed=d['company_id']==u['company_id'] and (u['role']!='DEVELOPER' or d['status'] in DEV_STATES)
+ else: allowed=d['company_id']==u['company_id'] and (u['role']!='DEVELOPER' or d['status'] in DEV_STATES or d['status']=='CONCLUIDA' and d['owner_id']==u['id'])
  if not allowed: raise Problem('Você não tem acesso a esta demanda.',403)
  d=dict(d)
  for k in ['answers','fields','suggestions','report']: d[k]=json.loads(d[k]) if d[k] else None
@@ -225,7 +225,7 @@ class Handler(BaseHTTPRequestHandler):
       for co in companies:
        if co['id']==u['company_id'] and u['role']=='ADMIN':co['tidioPublicKey']=chat.config(c,co['id'])['tidioPublicKey']
       if u['role']=='CLIENT': query='WHERE d.client_id=?'; args=(u['id'],)
-      elif u['role']=='DEVELOPER': query="WHERE d.company_id=? AND d.status IN ('ENVIADA_DESENVOLVIMENTO','EM_ESPERA','EM_ANDAMENTO','CONCLUIDA')"; args=(u['company_id'],)
+      elif u['role']=='DEVELOPER': query="WHERE d.company_id=? AND d.status IN ('ENVIADA_DESENVOLVIMENTO','EM_ESPERA','EM_ANDAMENTO')"; args=(u['company_id'],)
       else: query='WHERE d.company_id=?'; args=(u['company_id'],)
       demands=[dict(r) for r in c.execute('SELECT d.id,d.public_id,d.title,d.status,d.priority,d.created,d.updated,d.owner_id,u.name client_name,o.name owner_name,co.name company_name FROM demands d JOIN users u ON u.id=d.client_id LEFT JOIN users o ON o.id=d.owner_id JOIN companies co ON co.id=d.company_id '+query+' ORDER BY d.updated DESC',args)]
       members=[dict(r) for r in c.execute('SELECT id,name,email,role FROM users WHERE company_id=?',(u['company_id'],))] if u['role']=='ADMIN' else []

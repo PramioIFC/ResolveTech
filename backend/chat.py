@@ -93,7 +93,7 @@ def get(c,u,id):
  d=c.execute('SELECT * FROM demands WHERE id=?',(id,)).fetchone(); conv=snapshot(c,id)
  if not d or not conv: raise ChatError('Conversa não encontrada.',404)
  if u['role']=='CLIENT': allowed=d['client_id']==u['id']
- else: allowed=d['company_id']==u['company_id'] and (u['role']!='DEVELOPER' or d['status'] in ['ENVIADA_DESENVOLVIMENTO','EM_ESPERA','EM_ANDAMENTO','CONCLUIDA'])
+ else: allowed=d['company_id']==u['company_id'] and (u['role']!='DEVELOPER' or d['status'] in ['ENVIADA_DESENVOLVIMENTO','EM_ESPERA','EM_ANDAMENTO'] or d['status']=='CONCLUIDA' and d['owner_id']==u['id'])
  if not allowed: raise ChatError('Conversa não autorizada.',403)
  return dict(d),conv
 
@@ -145,6 +145,24 @@ def route(c,u,path,b):
    if existing['demand_id']!=id or existing['content']!=body or existing['actor_id']!=u['id']:raise ChatError('Identificador já utilizado.',409)
    return id
   message(c,id,role,body,u['id'],'internal-support',message_id=mid);bump(c,id);log(c,id,u,'Mensagem registrada no atendimento assistido.');return id
+ if action=='close':
+  if u['role'] not in ['SUPPORT','ADMIN']:raise ChatError('Somente o suporte pode finalizar este atendimento.',403)
+  c.execute('BEGIN IMMEDIATE');d,conv=get(c,u,id)
+  if conv['phase']=='RESOLVED':return id
+  if conv['phase']!='SUPPORT':raise ChatError('O atendimento humano não está ativo.',409)
+  c.execute("UPDATE conversations SET phase='RESOLVED',pending_id=NULL,pending_since=NULL WHERE demand_id=?",(id,));c.execute("UPDATE demands SET status='CONCLUIDA' WHERE id=?",(id,));bump(c,id)
+  message(c,id,'system','A equipe de suporte finalizou este atendimento.');log(c,id,u,'Suporte finalizou o atendimento.');return id
+ if action=='send-to-dev':
+  if u['role'] not in ['SUPPORT','ADMIN']:raise ChatError('Somente o suporte pode encaminhar ao desenvolvimento.',403)
+  c.execute('BEGIN IMMEDIATE');d,conv=get(c,u,id)
+  if d['status'] in ['ENVIADA_DESENVOLVIMENTO','EM_ESPERA','EM_ANDAMENTO'] or d['owner_id']:raise ChatError('Esta demanda jÃ¡ foi encaminhada ao desenvolvimento.',409)
+  rows=conv['messages'];facts=[{'field':'Relato literal do cliente','value':m['content']} for m in rows if m['role']=='user']
+  assistant_steps=[m['content'] for m in rows if m['role']=='assistant' and m['source']!='welcome'][-3:]
+  report={'summary':conv['summary'] or d['title'],'confirmedFacts':facts,'supportNotes':d['notes'] or '','missingInformation':conv['missing'],'possibleHypotheses':[],'suggestedNextSteps':assistant_steps or ['Reproduzir o problema com base no histÃ³rico e nas informaÃ§Ãµes confirmadas.'],'generator':'Conversa, formulÃ¡rio e resumo da IA â€¢ revisÃ£o confirmada pelo suporte','generatedAt':now(),'reviewedBy':u['name'],'reviewedAt':now()}
+  transcript='\n\n'.join(('Cliente' if m['role']=='user' else 'Suporte' if m['role']=='support' else 'Assistente IA')+': '+m['content'] for m in rows if m['role']!='system')
+  c.execute("UPDATE conversations SET phase='SUPPORT',satisfaction=0,pending_id=NULL,pending_since=NULL WHERE demand_id=?",(id,))
+  c.execute("UPDATE demands SET status='ENVIADA_DESENVOLVIMENTO',owner_id=NULL,report=?,report_reviewed=1,transcript=?,updated=?,revision=revision+1 WHERE id=?",(js(report),transcript,now(),id))
+  message(c,id,'system','O suporte confirmou a revisÃ£o e encaminhou todas as informaÃ§Ãµes ao desenvolvimento.');log(c,id,u,'RelatÃ³rio revisado e demanda encaminhada ao desenvolvimento.');return id
  if u['role']!='CLIENT':raise ChatError('Somente o cliente pode decidir o encaminhamento.',403)
  if action=='handoff':
   c.execute('BEGIN IMMEDIATE');d,conv=get(c,u,id)
