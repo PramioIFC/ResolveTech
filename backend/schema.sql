@@ -1,0 +1,14 @@
+PRAGMA foreign_keys=ON;
+CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,name TEXT NOT NULL,email TEXT NOT NULL UNIQUE,password TEXT NOT NULL,role TEXT NOT NULL CHECK(role IN ('CLIENT','ADMIN','SUPPORT','DEVELOPER')),company_id TEXT REFERENCES companies(id));
+CREATE TABLE IF NOT EXISTS companies(id TEXT PRIMARY KEY,name TEXT NOT NULL,cnpj TEXT NOT NULL,city TEXT NOT NULL,contact TEXT NOT NULL,hours TEXT NOT NULL,description TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),expires INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS issue_types(id TEXT PRIMARY KEY,company_id TEXT NOT NULL REFERENCES companies(id),name TEXT NOT NULL,description TEXT NOT NULL,active INTEGER NOT NULL DEFAULT 1);
+CREATE TABLE IF NOT EXISTS form_versions(id TEXT PRIMARY KEY,issue_id TEXT NOT NULL REFERENCES issue_types(id),version INTEGER NOT NULL,fields TEXT NOT NULL,created TEXT NOT NULL,UNIQUE(issue_id,version));
+CREATE TABLE IF NOT EXISTS demands(id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,company_id TEXT NOT NULL REFERENCES companies(id),client_id TEXT NOT NULL REFERENCES users(id),form_id TEXT NOT NULL REFERENCES form_versions(id),title TEXT NOT NULL,status TEXT NOT NULL,priority TEXT NOT NULL DEFAULT 'MEDIUM',owner_id TEXT REFERENCES users(id),answers TEXT NOT NULL DEFAULT '{}',notes TEXT NOT NULL DEFAULT '',transcript TEXT NOT NULL DEFAULT '',suggestions TEXT NOT NULL DEFAULT '[]',report TEXT,report_reviewed INTEGER NOT NULL DEFAULT 0,consent INTEGER NOT NULL DEFAULT 0,revision INTEGER NOT NULL DEFAULT 0,created TEXT NOT NULL,updated TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_demands_company_status ON demands(company_id,status);
+CREATE INDEX IF NOT EXISTS idx_demands_client ON demands(client_id);
+CREATE TABLE IF NOT EXISTS events(id TEXT PRIMARY KEY,demand_id TEXT NOT NULL REFERENCES demands(id),actor_id TEXT NOT NULL REFERENCES users(id),message TEXT NOT NULL,created TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_events_demand ON events(demand_id,created);
+CREATE TABLE IF NOT EXISTS attachments(id TEXT PRIMARY KEY,demand_id TEXT NOT NULL REFERENCES demands(id),name TEXT NOT NULL,mime TEXT NOT NULL,size INTEGER NOT NULL,created TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_attachments_demand ON attachments(demand_id);
+CREATE TABLE IF NOT EXISTS comments(id TEXT PRIMARY KEY,demand_id TEXT NOT NULL REFERENCES demands(id),actor_id TEXT NOT NULL REFERENCES users(id),body TEXT NOT NULL,created TEXT NOT NULL);
