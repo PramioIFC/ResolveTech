@@ -15,12 +15,7 @@ def clean(v,limit=6000):
  return v.strip()
 
 def config(c,company_id=None):
- key=''
- if company_id:
-  row=c.execute('SELECT tidio_public_key FROM company_integrations WHERE company_id=?',(company_id,)).fetchone()
-  if row: key=row[0]
-  elif company_id==os.environ.get('TIDIO_COMPANY_ID','company-demo'): key=os.environ.get('TIDIO_PUBLIC_KEY','')
- return {'groqConfigured':bool(os.environ.get('GROQ_API_KEY')),'model':MODEL,'tidioPublicKey':key if re.fullmatch('[a-zA-Z0-9]{32}',key) else '', 'provider':'Groq'}
+ return {'groqConfigured':bool(os.environ.get('GROQ_API_KEY')),'model':MODEL,'provider':'Groq'}
 
 def snapshot(c,id):
  row=c.execute('SELECT * FROM conversations WHERE demand_id=?',(id,)).fetchone()
@@ -180,8 +175,4 @@ def route(c,u,path,b):
   if conv['phase'] not in ['AI','AWAITING_FEEDBACK'] or not any(m['source']=='groq:'+MODEL for m in conv['messages']):raise ChatError('A conversa ainda não tem resposta da IA para avaliar.',409)
   c.execute("UPDATE conversations SET phase='RESOLVED',satisfaction=1,pending_id=NULL,pending_since=NULL WHERE demand_id=?",(id,));c.execute("UPDATE demands SET status='CONCLUIDA' WHERE id=?",(id,));bump(c,id)
   message(c,id,'system','Você confirmou que ficou satisfeito. Atendimento concluído. Obrigado!');log(c,id,u,'Cliente confirmou satisfação e encerrou o atendimento com a IA.');return id
- if action=='tidio-context':
-  if conv['phase']!='SUPPORT':raise ChatError('Solicite atendimento assistido primeiro.',409)
-  # Browser delivery is not asserted as server-confirmed. The widget owns its conversation.
-  log(c,id,u,'Cliente abriu a integração Tidio; entrega externa deve ser confirmada no widget.');return id
  raise ChatError('Ação não encontrada.',404)

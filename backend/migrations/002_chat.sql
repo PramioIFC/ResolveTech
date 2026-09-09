@@ -26,7 +26,3 @@ CREATE TABLE IF NOT EXISTS issue_guidance (
  issue_id TEXT PRIMARY KEY REFERENCES issue_types(id),
  instructions TEXT NOT NULL DEFAULT ''
 );
-CREATE TABLE IF NOT EXISTS company_integrations (
- company_id TEXT PRIMARY KEY REFERENCES companies(id),
- tidio_public_key TEXT NOT NULL DEFAULT ''
-);

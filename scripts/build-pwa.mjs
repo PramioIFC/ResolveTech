@@ -13,7 +13,7 @@ self.addEventListener('activate',event=>event.waitUntil((async()=>{for(const key
 self.addEventListener('message',event=>{if(event.data?.type==='ACTIVATE_UPDATE')self.skipWaiting();});
 self.addEventListener('fetch',event=>{
  const request=event.request,url=new URL(request.url);
- // Authenticated APIs, attachments, uploads, Groq and Tidio are NEVER cached or replayed.
+ // Authenticated APIs, attachments, uploads and Groq are NEVER cached or replayed.
  if(request.method!=='GET'||url.origin!==self.location.origin||url.pathname.startsWith('/api/'))return;
  if(request.mode==='navigate'){
   event.respondWith((async()=>{try{return await fetch(request);}catch{return (await caches.open(CACHE)).match('/index.html');}})());return;

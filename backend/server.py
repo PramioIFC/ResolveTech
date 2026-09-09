@@ -222,8 +222,6 @@ class Handler(BaseHTTPRequestHandler):
        if u['role']=='ADMIN' and i['company_id']==u['company_id']:
         guidance=c.execute('SELECT instructions FROM issue_guidance WHERE issue_id=?',(i['id'],)).fetchone();i['guidance']=guidance[0] if guidance else ''
       issues=[i for i in issues if not i['id'].startswith('unknown-')]
-      for co in companies:
-       if co['id']==u['company_id'] and u['role']=='ADMIN':co['tidioPublicKey']=chat.config(c,co['id'])['tidioPublicKey']
       if u['role']=='CLIENT': query='WHERE d.client_id=?'; args=(u['id'],)
       elif u['role']=='DEVELOPER': query="WHERE d.company_id=? AND d.status IN ('ENVIADA_DESENVOLVIMENTO','EM_ESPERA','EM_ANDAMENTO')"; args=(u['company_id'],)
       else: query='WHERE d.company_id=?'; args=(u['company_id'],)
@@ -247,7 +245,7 @@ class Handler(BaseHTTPRequestHandler):
    self.send_header('Content-Type',mime);self.send_header('Content-Length',str(len(data)));self.send_header('X-Content-Type-Options','nosniff');self.send_header('Referrer-Policy','same-origin')
    self.send_header('Cache-Control','public, max-age=31536000, immutable' if '/assets/' in path else 'no-cache')
    if path=='/sw.js':self.send_header('Service-Worker-Allowed','/')
-   self.send_header('Content-Security-Policy',"default-src 'self'; script-src 'self' https://code.tidio.co https://widget-v4.tidiochat.com https://*.tidio.co https://*.tidiochat.com; style-src 'self' 'unsafe-inline' https://*.tidio.co https://*.tidiochat.com; img-src 'self' data: blob: https://cdnjs.cloudflare.com https://unpkg.com https://tidio-images-messenger.s3.us-east-1.amazonaws.com https://*.tidio.co https://*.tidiochat.com; connect-src 'self' https://api.groq.com https://uploads.tidio.com https://*.tidio.co https://*.tidiochat.com wss://*.tidio.co wss://*.tidiochat.com; frame-src 'self' https://*.tidio.co https://*.tidiochat.com; font-src 'self' data: https://*.tidio.co https://*.tidiochat.com; media-src 'self' blob: https://*.tidio.co https://*.tidiochat.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'")
+   self.send_header('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://cdnjs.cloudflare.com https://unpkg.com; connect-src 'self' https://api.groq.com; frame-src 'self'; font-src 'self' data:; media-src 'self' blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'")
    self.end_headers(); self.wfile.write(data)
   except (Problem,chat.ChatError) as e: self.send_json(e.status,{'error':e.message})
   except Exception as e: print(type(e).__name__,str(e)); self.send_json(500,{'error':'Não foi possível concluir a operação.'})
@@ -304,10 +302,6 @@ class Handler(BaseHTTPRequestHandler):
    c.execute('INSERT INTO issue_guidance VALUES(?,?) ON CONFLICT(issue_id) DO UPDATE SET instructions=excluded.instructions',(issue,guide));return {'ok':True}
   if path=='/api/company':
    if u['role']!='ADMIN': raise Problem('Apenas administradores.',403)
-   if 'tidioPublicKey' in b:
-    key=text(b['tidioPublicKey'],32)
-    if key and not re.fullmatch('[a-zA-Z0-9]{32}',key):raise Problem('A chave pública Tidio deve ter 32 caracteres alfanuméricos.')
-    c.execute('INSERT INTO company_integrations VALUES(?,?) ON CONFLICT(company_id) DO UPDATE SET tidio_public_key=excluded.tidio_public_key',(u['company_id'],key))
    c.execute('UPDATE companies SET name=?,cnpj=?,city=?,contact=?,hours=?,description=? WHERE id=?',(required(b.get('name','')),text(b.get('cnpj','')),text(b.get('city','')),text(b.get('contact','')),text(b.get('hours','')),text(b.get('description','')),u['company_id'])); return {'ok':True}
   if path=='/api/members':
    if u['role']!='ADMIN': raise Problem('Apenas administradores.',403)
