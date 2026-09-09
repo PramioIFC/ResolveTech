@@ -372,7 +372,14 @@ class Handler(BaseHTTPRequestHandler):
    facts=([{'field':'Relato literal do cliente','value':m['content']} for m in conversation['messages'] if m['role']=='user'] if conversation else [{'field':f['label'],'value':d['answers'].get(f['key'])} for f in d['fields'] if d['answers'].get(f['key']) not in [None,'',[]]])
    missing=conversation['missing'] if conversation else [f['label'] for f in d['fields'] if f['required'] and d['answers'].get(f['key']) in [None,'',[]]]
    if not facts and not conversation: raise Problem('Confirme pelo menos uma resposta antes de gerar o relatório.')
-   report=dict(summary=(conversation['summary'] or d['title']) if conversation else d['title'],confirmedFacts=facts,supportNotes=d['notes'],missingInformation=missing,possibleHypotheses=[],suggestedNextSteps=['Revisar as informações confirmadas e reproduzir o problema.']+(['Coletar as informações ainda faltantes.'] if missing else []),generator='Relatório local estruturado',generatedAt=now())
+   supplied=b.get('aiResult')
+   if supplied is not None:
+    if not isinstance(supplied,dict) or not isinstance(supplied.get('summary'),str) or not isinstance(supplied.get('confirmedFacts'),list) or not isinstance(supplied.get('missingInformation'),list) or not isinstance(supplied.get('possibleHypotheses'),list) or not isinstance(supplied.get('suggestedNextSteps'),list): raise Problem('Relatório da IA inválido.')
+    clean_facts=[]
+    for fact in supplied['confirmedFacts'][:50]:
+     if isinstance(fact,dict): clean_facts.append({'field':text(fact.get('field',''),300),'value':text(fact.get('value',''),3000)})
+    report=dict(summary=required(supplied['summary'],10000),confirmedFacts=clean_facts or facts,supportNotes=d['notes'],missingInformation=[text(x,300) for x in supplied['missingInformation'][:30] if isinstance(x,str)],possibleHypotheses=[text(x,1000) for x in supplied['possibleHypotheses'][:20] if isinstance(x,str)],suggestedNextSteps=[text(x,1000) for x in supplied['suggestedNextSteps'][:20] if isinstance(x,str)],generator='Relatório organizado pela IA • revisão humana obrigatória',generatedAt=now())
+   else: report=dict(summary=(conversation['summary'] or d['title']) if conversation else d['title'],confirmedFacts=facts,supportNotes=d['notes'],missingInformation=missing,possibleHypotheses=[],suggestedNextSteps=['Revisar as informações confirmadas e reproduzir o problema.']+(['Coletar as informações ainda faltantes.'] if missing else []),generator='Relatório estruturado • IA indisponível',generatedAt=now())
    if os.environ.get('OLLAMA_URL') and not conversation:
     generated=ai_report(report); report['summary']=generated['summary']; report['suggestedNextSteps']=generated['nextSteps']; report['generator']='Resumo e próximos passos sugeridos por IA local • Ollama'
    c.execute("UPDATE demands SET report=?,report_reviewed=0,status='AGUARDANDO_TRIAGEM' WHERE id=?",(dumps(report),id)); event(c,id,u,'Relatório estruturado gerado a partir das respostas confirmadas.')
