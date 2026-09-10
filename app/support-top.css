@@ -11,11 +11,17 @@
   justify-content: flex-end;
   gap: 9px;
   flex-wrap: wrap;
+  padding: 12px;
+  border: 1px solid #d9cef4;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f7f3ff, #eee8ff);
+  box-shadow: 0 5px 18px #4933a112;
 }
 
 .support-top-actions > b {
   color: #514298;
   font-size: 14px;
+  font-weight: 750;
 }
 
 .support-top-actions .btn {
@@ -31,6 +37,7 @@
 
   .support-top-actions {
     justify-content: flex-start;
+    padding: 14px;
   }
 
   .support-top-actions > b {
@@ -39,5 +46,6 @@
 
   .support-top-actions .btn {
     flex: 1;
+    min-width: 135px;
   }
 }
