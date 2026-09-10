@@ -50,9 +50,41 @@
   border-top: 1px solid #e3deef;
 }
 
+.problem-card.expanded {
+  grid-column: 1 / -1;
+  padding: 28px;
+  border-color: #a994e8;
+  box-shadow: 0 10px 30px rgba(66, 50, 171, 0.08);
+}
+
+.expanded-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e8e1f3;
+  color: #4b369f;
+}
+
+.expanded-card-top button {
+  color: #6c5a9b;
+  font-size: 13px;
+}
+
+.problem-card.expanded .page-heading {
+  margin-bottom: 22px;
+}
+
+.problem-card.expanded .page-heading > .btn {
+  display: none;
+}
+
 @media (max-width: 800px) {
   .form-choice { align-items: stretch; flex-direction: column; }
   .member-role { width: 100%; }
+  .problem-card.expanded { padding: 16px; }
 }
 
 .brand-home:hover {
