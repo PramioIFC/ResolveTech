@@ -18,6 +18,7 @@
 }
 
 .form-choice p { margin-top: 5px; }
+.generated-problem-editor .form-choice { display: none; }
 
 .problem-card-version {
   display: inline-block;
