@@ -19,8 +19,33 @@
 
 .form-choice p { margin-top: 5px; }
 
+.problem-card-version {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: #f1eff8;
+  color: #7666a1;
+  font-size: 12px;
+}
+
+.issue-card > small {
+  display: block;
+  margin: -8px 0 18px;
+}
+
+.member-role {
+  width: 190px;
+}
+
+.member-role > span {
+  display: block;
+  margin-bottom: 5px;
+}
+
 @media (max-width: 800px) {
   .form-choice { align-items: stretch; flex-direction: column; }
+  .member-role { width: 100%; }
 }
 
 .brand-home:hover {

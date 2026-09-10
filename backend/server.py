@@ -316,6 +316,13 @@ class Handler(BaseHTTPRequestHandler):
    role=b.get('role'); p=required(b.get('password',''),128)
    if role not in ['ADMIN','SUPPORT','DEVELOPER'] or len(p)<8: raise Problem('Função inválida ou senha menor que 8 caracteres.')
    c.execute('INSERT INTO users VALUES(?,?,?,?,?,?)',(uid(),required(b.get('name','')),email(b.get('email','')),password_hash(p),role,u['company_id'])); return {'ok':True}
+  if path=='/api/members/role':
+   if u['role']!='ADMIN': raise Problem('Apenas administradores.',403)
+   member=b.get('memberId');role=b.get('role')
+   if role not in ['ADMIN','SUPPORT','DEVELOPER']: raise Problem('Função inválida.')
+   if member==u['id']: raise Problem('Para evitar perda de acesso, outro administrador deve alterar sua função.',400)
+   if not c.execute('SELECT 1 FROM users WHERE id=? AND company_id=?',(member,u['company_id'])).fetchone(): raise Problem('Integrante não encontrado.',404)
+   c.execute('UPDATE users SET role=? WHERE id=?',(role,member));return {'ok':True}
   if path=='/api/forms':
    if u['role']!='ADMIN': raise Problem('Apenas administradores.',403)
    fields=fields_validate(b.get('fields')); id=b.get('issueId'); name=required(b.get('name',''))
