@@ -84,7 +84,11 @@
   display: none;
 }
 
+.problem-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
 .problem-card { position: relative; }
+.problem-card:not(.expanded) { padding: 20px; }
+.problem-card:not(.expanded) > svg { margin-bottom: 10px; }
+.problem-card:not(.expanded) p { margin: 7px 0 12px; }
 
 .problem-trash {
   position: absolute;
@@ -173,8 +177,13 @@
 .generated-actions .btn { flex: 1; }
 .reject-draft { color: #a43754; font-size: 13px; font-weight: 700; padding: 8px; }
 
+@media (max-width: 1200px) {
+  .problem-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (max-width: 800px) {
   .generated-cards { grid-template-columns: 1fr; }
+  .problem-cards { grid-template-columns: 1fr; }
   .form-choice { align-items: stretch; flex-direction: column; }
   .member-role { width: 100%; }
   .problem-card.expanded { padding: 16px; }
