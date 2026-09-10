@@ -16,6 +16,7 @@ class ChatTests(unittest.TestCase):
   count=len(d['chat']['messages']);d=self.client.request('chat/'+d['id']+'/handoff',{});self.assertEqual(len(d['chat']['messages']),count)
   mid=rt.uid();d=self.client.request('chat/'+d['id']+'/reply',{'messageId':mid,'content':'Preciso de ajuda com o login.'});d=self.support.request('chat/'+d['id']+'/reply',{'messageId':rt.uid(),'content':'Olá, vamos verificar isso juntos.'});self.assertEqual(d['chat']['messages'][-1]['role'],'support')
   d=self.support.request('demands/'+d['id']+'/start',{'revision':d['revision']})
+  d=self.support.request('demands/'+d['id']+'/save',{'revision':d['revision'],'notes':'Contexto confirmado pelo suporte.'})
   d=self.support.request('demands/'+d['id']+'/report',{'revision':d['revision']});self.assertTrue(d['report']['confirmedFacts'])
   d=self.support.request('demands/'+d['id']+'/review',{'revision':d['revision'],'summary':'Falha de login relatada pelo cliente.','priority':'MEDIUM','nextSteps':['Verificar o ambiente.']})
   d=self.support.request('demands/'+d['id']+'/send',{'revision':d['revision']});d=self.dev.request('demands/'+d['id']+'/claim',{'revision':d['revision']});d=self.dev.request('demands/'+d['id']+'/status',{'revision':d['revision'],'status':'CONCLUIDA'});self.assertEqual(d['chat']['phase'],'RESOLVED')

@@ -391,7 +391,10 @@ class Handler(BaseHTTPRequestHandler):
    if priority not in ['LOW','MEDIUM','HIGH','CRITICAL']: raise Problem('Prioridade inválida.')
    transcript=text(b.get('transcript',d['transcript']),50000) if staff else d['transcript']
    consent=bool(b.get('consent',d['consent'])) if staff else bool(d['consent'])
-   if transcript and not consent: raise Problem('Registre o consentimento antes de salvar a transcrição.')
+   # The chat history is stored as a transcript during handoff, including human-only
+   # conversations that do not require Groq consent. Only protect an explicit new
+   # transcript supplied by a legacy client; ordinary form saves must preserve it.
+   if 'transcript' in b and transcript!=d['transcript'] and transcript and not consent: raise Problem('Registre o consentimento antes de salvar uma transcrição importada.')
    c.execute('UPDATE demands SET answers=?,notes=?,transcript=?,consent=?,title=?,status=?,priority=?,report=NULL,report_reviewed=0 WHERE id=?',(dumps(answers),notes,transcript,int(consent),required(b.get('title',d['title'])),status,priority,id)); event(c,id,u,'Formulário enviado para triagem.' if b.get('submit') else 'Atendimento solicitado.' if b.get('guided') else 'Respostas e contexto atualizados por '+u['name']+'.')
   elif action=='start':
    if not staff or d['status'] not in ['AGUARDANDO_ATENDIMENTO','AGUARDANDO_TRIAGEM']: raise Problem('Atendimento indisponível nesta etapa.',403)
