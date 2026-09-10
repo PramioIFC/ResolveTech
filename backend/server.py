@@ -225,7 +225,7 @@ class Handler(BaseHTTPRequestHandler):
       if u['role']=='CLIENT': query='WHERE d.client_id=?'; args=(u['id'],)
       elif u['role']=='DEVELOPER': query="WHERE d.company_id=? AND d.status IN ('ENVIADA_DESENVOLVIMENTO','EM_ESPERA','EM_ANDAMENTO')"; args=(u['company_id'],)
       else: query='WHERE d.company_id=?'; args=(u['company_id'],)
-      demands=[dict(r) for r in c.execute('SELECT d.id,d.public_id,d.title,d.status,d.priority,d.created,d.updated,d.owner_id,u.name client_name,o.name owner_name,co.name company_name FROM demands d JOIN users u ON u.id=d.client_id LEFT JOIN users o ON o.id=d.owner_id JOIN companies co ON co.id=d.company_id '+query+' ORDER BY d.updated DESC',args)]
+      demands=[dict(r) for r in c.execute('SELECT d.id,d.public_id,d.title,d.status,d.priority,d.revision,d.created,d.updated,d.owner_id,u.name client_name,o.name owner_name,co.name company_name FROM demands d JOIN users u ON u.id=d.client_id LEFT JOIN users o ON o.id=d.owner_id JOIN companies co ON co.id=d.company_id '+query+' ORDER BY d.updated DESC',args)]
       members=[dict(r) for r in c.execute('SELECT id,name,email,role FROM users WHERE company_id=?',(u['company_id'],))] if u['role']=='ADMIN' else []
       return self.send_json(200,dict(companies=companies,issues=issues,demands=demands,members=members))
      if path.startswith('/api/demands/'): return self.send_json(200,detail(c,path.split('/')[-1],u))
@@ -355,10 +355,12 @@ class Handler(BaseHTTPRequestHandler):
     answers_validate(d['fields'],answers,True); status='AGUARDANDO_TRIAGEM'
    if client and b.get('guided'): status='AGUARDANDO_ATENDIMENTO'
    notes=text(b.get('notes',d['notes']),15000) if staff else d['notes']
+   priority=b.get('priority',d['priority']) if staff else d['priority']
+   if priority not in ['LOW','MEDIUM','HIGH','CRITICAL']: raise Problem('Prioridade inválida.')
    transcript=text(b.get('transcript',d['transcript']),50000) if staff else d['transcript']
    consent=bool(b.get('consent',d['consent'])) if staff else bool(d['consent'])
    if transcript and not consent: raise Problem('Registre o consentimento antes de salvar a transcrição.')
-   c.execute('UPDATE demands SET answers=?,notes=?,transcript=?,consent=?,title=?,status=?,report=NULL,report_reviewed=0 WHERE id=?',(dumps(answers),notes,transcript,int(consent),required(b.get('title',d['title'])),status,id)); event(c,id,u,'Formulário enviado para triagem.' if b.get('submit') else 'Atendimento guiado solicitado.' if b.get('guided') else 'Respostas e contexto atualizados por '+u['name']+'.')
+   c.execute('UPDATE demands SET answers=?,notes=?,transcript=?,consent=?,title=?,status=?,priority=?,report=NULL,report_reviewed=0 WHERE id=?',(dumps(answers),notes,transcript,int(consent),required(b.get('title',d['title'])),status,priority,id)); event(c,id,u,'Formulário enviado para triagem.' if b.get('submit') else 'Atendimento solicitado.' if b.get('guided') else 'Respostas e contexto atualizados por '+u['name']+'.')
   elif action=='start':
    if not staff or d['status'] not in ['AGUARDANDO_ATENDIMENTO','AGUARDANDO_TRIAGEM']: raise Problem('Atendimento indisponível nesta etapa.',403)
    c.execute("UPDATE demands SET status='EM_ATENDIMENTO',owner_id=? WHERE id=?",(u['id'],id)); event(c,id,u,'Atendimento iniciado; suporte assumiu a demanda.')
