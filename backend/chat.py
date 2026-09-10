@@ -15,10 +15,7 @@ def clean(v,limit=6000):
  return v.strip()
 
 def groq_key():
- # During the MVP, reports use NEXT_PUBLIC_GROQ_API_KEY in the browser. Prefer
- # that same known-working credential so server-side form generation cannot
- # silently use a different stale GROQ_API_KEY.
- key=(os.environ.get('NEXT_PUBLIC_GROQ_API_KEY') or os.environ.get('GROQ_API_KEY','')).strip()
+ key=os.environ.get('GROQ_API_KEY','').strip()
  if key.lower().startswith('bearer '): key=key[7:].strip()
  return key.strip('"\'')
 
@@ -31,7 +28,7 @@ def groq_error(e):
  return 'A credencial ou a permissão foi recusada.'
 
 def config(c,company_id=None):
- return {'groqConfigured':bool(groq_key()),'model':MODEL,'provider':'Groq'}
+ return {'groqConfigured':bool(os.environ.get('GROQ_API_KEY')),'model':MODEL,'provider':'Groq'}
 
 def snapshot(c,id):
  row=c.execute('SELECT * FROM conversations WHERE demand_id=?',(id,)).fetchone()
