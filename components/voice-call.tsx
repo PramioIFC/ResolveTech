@@ -7,6 +7,13 @@ import {VoiceCall,VoiceSnapshot} from '@/lib/cloudflare-voice';
 export default function VoiceCallPanel({demandId,compact=false,onBeforeJoin}: {demandId:string;compact?:boolean;onBeforeJoin?:()=>Promise<void>}){
  const call=useMemo(()=>new VoiceCall(demandId),[demandId]);const [state,setState]=useState<VoiceSnapshot>(call.snapshot);const audio=useRef<HTMLAudioElement>(null);
  useEffect(()=>{const unsub=call.subscribe(setState);void call.check();const poll=setInterval(()=>{if(call.snapshot.state==='idle')void call.check()},3000);return()=>{unsub();clearInterval(poll);void call.leave()}},[call]);
+ useEffect(()=>{
+  if(!state.incoming&&state.state!=='waiting')return;
+  let context:AudioContext|undefined,timer:ReturnType<typeof setInterval>|undefined;
+  const ring=()=>{try{context??=new AudioContext();if(context.state==='suspended')void context.resume();const start=context.currentTime;const notes=state.incoming?[880,660]:[440];notes.forEach((frequency,index)=>{const oscillator=context!.createOscillator(),gain=context!.createGain(),at=start+index*.18;oscillator.frequency.value=frequency;gain.gain.setValueAtTime(0.0001,at);gain.gain.exponentialRampToValueAtTime(state.incoming ? .12 : .045,at+.02);gain.gain.exponentialRampToValueAtTime(.0001,at+.15);oscillator.connect(gain).connect(context!.destination);oscillator.start(at);oscillator.stop(at+.17)});}catch{}};
+  ring();timer=setInterval(ring,state.incoming?1800:2800);
+  return()=>{if(timer)clearInterval(timer);if(context)void context.close()};
+ },[state.incoming,state.state]);
  async function join(){try{await onBeforeJoin?.();if(audio.current)await call.join(audio.current)}catch(e:any){toast.error(e.message)}}
  const active=['joining','waiting','connected'].includes(state.state);
  return <div className={'voice-call '+(compact?'compact ':'')+(state.incoming?'incoming':'')}>
