@@ -8,7 +8,7 @@ from urllib.parse import urlparse, unquote
 ROOT=Path(__file__).resolve().parent.parent
 import sys
 sys.path.insert(0,str(ROOT/"backend"))
-import chat
+import chat, voice
 # Optional local configuration, without an extra dependency. Environment wins.
 if (ROOT/'.env').exists():
  for line in (ROOT/'.env').read_text(encoding='utf-8').splitlines():
@@ -228,6 +228,7 @@ class Handler(BaseHTTPRequestHandler):
       demands=[dict(r) for r in c.execute('SELECT d.id,d.public_id,d.title,d.status,d.priority,d.revision,d.created,d.updated,d.owner_id,u.name client_name,o.name owner_name,co.name company_name FROM demands d JOIN users u ON u.id=d.client_id LEFT JOIN users o ON o.id=d.owner_id JOIN companies co ON co.id=d.company_id '+query+' ORDER BY d.updated DESC',args)]
       members=[dict(r) for r in c.execute('SELECT id,name,email,role FROM users WHERE company_id=?',(u['company_id'],))] if u['role']=='ADMIN' else []
       return self.send_json(200,dict(companies=companies,issues=issues,demands=demands,members=members))
+     if path.startswith('/api/voice/') and path.endswith('/status'): return self.send_json(200,voice.status(c,u,path.split('/')[3]))
      if path.startswith('/api/demands/'): return self.send_json(200,detail(c,path.split('/')[-1],u))
      if path.startswith('/api/files/'):
       a=c.execute('SELECT * FROM attachments WHERE id=?',(path.split('/')[-1],)).fetchone()
@@ -247,7 +248,7 @@ class Handler(BaseHTTPRequestHandler):
    if path=='/sw.js':self.send_header('Service-Worker-Allowed','/')
    self.send_header('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://cdnjs.cloudflare.com https://unpkg.com; connect-src 'self' https://api.groq.com; frame-src 'self'; font-src 'self' data:; media-src 'self' blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'")
    self.end_headers(); self.wfile.write(data)
-  except (Problem,chat.ChatError) as e: self.send_json(e.status,{'error':e.message})
+  except (Problem,chat.ChatError,voice.VoiceError) as e: self.send_json(e.status,{'error':e.message})
   except Exception as e: print(type(e).__name__,str(e)); self.send_json(500,{'error':'Não foi possível concluir a operação.'})
  def do_POST(self):
   try:
@@ -283,11 +284,13 @@ class Handler(BaseHTTPRequestHandler):
      cookie=SimpleCookie(); cookie.load(self.headers.get('Cookie','')); token=cookie.get('rt_session')
      if token: c.execute('DELETE FROM sessions WHERE token=?',(hashlib.sha256(token.value.encode()).hexdigest(),))
      c.commit(); return self.send_json(200,{'ok':True},'rt_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0')
-    if path.startswith('/api/chat/'):
+    if path.startswith('/api/voice/'):
+     result=voice.route(c,u,path,b)
+    elif path.startswith('/api/chat/'):
      did=chat.route(c,u,path,b);c.commit();result=detail(c,did,u)
     else:result=self.action(c,u,path,b)
     c.commit(); self.send_json(200,result)
-  except (Problem,chat.ChatError) as e: self.send_json(e.status,{'error':e.message})
+  except (Problem,chat.ChatError,voice.VoiceError) as e: self.send_json(e.status,{'error':e.message})
   except sqlite3.IntegrityError: self.send_json(409,{'error':'Registro duplicado ou relacionamento inválido.'})
   except Exception as e: print(type(e).__name__,str(e)); self.send_json(500,{'error':'Não foi possível salvar. Seus dados preenchidos foram mantidos na tela.'})
  def action(self,c,u,path,b):

@@ -22,3 +22,7 @@ Central de atendimento com conversa investigativa por IA, atendimento humano int
 O Dockerfile compila o frontend e inicia o backend Python. Configure `GROQ_API_KEY`, use um volume montado em `/app/data` e publique a porta do serviço. Alterações enviadas à branch conectada são implantadas automaticamente pelo Railway.
 
 Dados locais e dados hospedados são bancos separados. Não versionar `.env`, `data/` ou artefatos compilados.
+
+Para habilitar as ligações, configure também `CLOUDFLARE_CALLS_APP_ID` e
+`CLOUDFLARE_CALLS_APP_SECRET` nas variáveis privadas do serviço. O segredo é
+usado somente pelo backend para sinalizar o Cloudflare Realtime SFU.
