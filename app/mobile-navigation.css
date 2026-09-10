@@ -86,9 +86,10 @@
 
 .problem-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
 .problem-card { position: relative; }
-.problem-card:not(.expanded) { padding: 20px; }
+.problem-card:not(.expanded) { padding: 17px; }
 .problem-card:not(.expanded) > svg { margin-bottom: 10px; }
 .problem-card:not(.expanded) p { margin: 7px 0 12px; }
+.problem-card:not(.expanded) h2 { font-size: 18px; }
 
 .problem-trash {
   position: absolute;
@@ -166,9 +167,10 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.generated-card { padding: 20px; }
+.generated-card { padding: 16px; }
 .generated-card > svg { margin-bottom: 10px; }
 .generated-card p { margin: 7px 0 12px; }
+.generated-card h2 { font-size: 18px; }
 .generated-section-title { display: flex; align-items: center; gap: 8px; margin-top: 22px; }
 .generated-section-title h3 { margin: 0; }
 .generated-section-title span,.evaluation-badge { font-size: 12px; color: #6b50bd; background: #eee9fb; padding: 3px 8px; border-radius: 999px; }
@@ -177,8 +179,8 @@
 .generated-actions .btn { flex: 1; }
 .reject-draft { color: #a43754; font-size: 13px; font-weight: 700; padding: 8px; }
 
-@media (max-width: 1200px) {
-  .problem-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 801px) {
+  .problem-cards,.generated-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 800px) {
