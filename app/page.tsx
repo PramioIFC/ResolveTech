@@ -1,4 +1,5 @@
 'use client';
+import './support-top.css';
 import React,{useEffect,useState} from 'react';
 import ChatWorkspace,{StaffConversation} from '@/components/chat-workspace';
 import PwaControls from '@/components/pwa-controls';

@@ -1,0 +1,43 @@
+.support-top {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.support-top-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.support-top-actions > b {
+  color: #514298;
+  font-size: 14px;
+}
+
+.support-top-actions .btn {
+  min-height: 38px;
+  padding: 8px 13px;
+}
+
+@media (max-width: 700px) {
+  .support-top {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .support-top-actions {
+    justify-content: flex-start;
+  }
+
+  .support-top-actions > b {
+    width: 100%;
+  }
+
+  .support-top-actions .btn {
+    flex: 1;
+  }
+}
