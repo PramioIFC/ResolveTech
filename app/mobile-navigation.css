@@ -159,9 +159,22 @@
 
 .generated-cards {
   margin: 18px 0 22px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.generated-card { padding: 20px; }
+.generated-card > svg { margin-bottom: 10px; }
+.generated-card p { margin: 7px 0 12px; }
+.generated-section-title { display: flex; align-items: center; gap: 8px; margin-top: 22px; }
+.generated-section-title h3 { margin: 0; }
+.generated-section-title span,.evaluation-badge { font-size: 12px; color: #6b50bd; background: #eee9fb; padding: 3px 8px; border-radius: 999px; }
+.evaluation-badge { display: inline-block; margin-bottom: 12px; }
+.generated-actions { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.generated-actions .btn { flex: 1; }
+.reject-draft { color: #a43754; font-size: 13px; font-weight: 700; padding: 8px; }
+
 @media (max-width: 800px) {
+  .generated-cards { grid-template-columns: 1fr; }
   .form-choice { align-items: stretch; flex-direction: column; }
   .member-role { width: 100%; }
   .problem-card.expanded { padding: 16px; }
