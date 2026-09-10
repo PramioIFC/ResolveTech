@@ -23,7 +23,27 @@
   background: #f2effa;
 }
 
+.mobile-menu-trigger {
+  display: none;
+}
+
 @media (max-width: 800px) {
+  .mobile-menu-trigger {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 50;
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e2ddec;
+    border-radius: 10px;
+    background: rgba(255,255,255,.96);
+    box-shadow: 0 4px 14px #2417521f;
+  }
+
   .topbar {
     height: 58px;
     padding: 0 10px;
