@@ -16,17 +16,28 @@ def _access(c,u,demand_id):
  if d['phase']!='SUPPORT' or d['status']=='CONCLUIDA': raise VoiceError('A ligação só fica disponível durante o atendimento com o suporte.',409)
  return d
 
+def _error_detail(raw):
+ try:
+  payload=json.loads(raw.decode('utf-8','replace'))
+  if isinstance(payload,dict):
+   for key in ['errorDescription','message','error']:
+    value=payload.get(key)
+    if isinstance(value,str) and value:return value[:500]
+   errors=payload.get('errors')
+   if isinstance(errors,list) and errors and isinstance(errors[0],dict): return str(errors[0].get('message') or errors[0].get('code') or '')[:500]
+ except Exception: pass
+ return ''
+
 def _cf(path,method='POST',body=None):
  app=os.environ.get('CLOUDFLARE_CALLS_APP_ID',''); secret=os.environ.get('CLOUDFLARE_CALLS_APP_SECRET','')
  if not app or not secret: raise VoiceError('A chamada de voz ainda não foi configurada no servidor.',503)
  data=None if body is None else json.dumps(body).encode()
- req=urllib.request.Request('https://rtc.live.cloudflare.com/v1/apps/'+app+path,data=data,method=method,headers={'Authorization':'Bearer '+secret,'Content-Type':'application/json'})
+ req=urllib.request.Request('https://rtc.live.cloudflare.com/v1/apps/'+app+path,data=data,method=method,headers={'Authorization':'Bearer '+secret,'Content-Type':'application/json','Accept':'application/json','User-Agent':'ResolveTech/1.0'})
  try:
   with urllib.request.urlopen(req,timeout=20) as res: result=json.loads(res.read())
  except urllib.error.HTTPError as e:
-  try: detail=json.loads(e.read()).get('errorDescription')
-  except Exception: detail=None
-  raise VoiceError(detail or 'A Cloudflare recusou a sinalização da chamada.',502)
+  detail=_error_detail(e.read())
+  raise VoiceError(('Cloudflare '+str(e.code)+': '+detail) if detail else 'Cloudflare recusou a sinalização (HTTP '+str(e.code)+').',502)
  except Exception as e: raise VoiceError('Não foi possível conectar à infraestrutura de voz.',502) from e
  if result.get('errorCode'): raise VoiceError(result.get('errorDescription') or 'Falha na sinalização da chamada.',502)
  return result
