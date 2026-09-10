@@ -328,6 +328,12 @@ class Handler(BaseHTTPRequestHandler):
    issue=b.get('issueId')
    if not c.execute('SELECT 1 FROM issue_types WHERE id=? AND company_id=? AND active=1',(issue,u['company_id'])).fetchone(): raise Problem('Problema não encontrado.',404)
    c.execute('UPDATE issue_types SET active=0 WHERE id=?',(issue,));return {'ok':True}
+  if path=='/api/issues/generate':
+   if u['role']!='ADMIN': raise Problem('Apenas administradores.',403)
+   problems=chat.generate_protocol(b.get('protocol',''))
+   for problem in problems:
+    problem['name']=required(problem.get('name',''),120);problem['description']=text(problem.get('description',''),1000);problem['guidance']=text(problem.get('guidance',''),10000);problem['fields']=fields_validate(problem.get('fields'))
+   return {'problems':problems}
   if path=='/api/forms':
    if u['role']!='ADMIN': raise Problem('Apenas administradores.',403)
    fields=fields_validate(b.get('fields')); id=b.get('issueId'); name=required(b.get('name',''))

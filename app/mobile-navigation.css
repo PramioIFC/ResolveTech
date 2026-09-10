@@ -124,6 +124,23 @@
 
 .delete-problem { color: #b23855 !important; }
 
+.automatic-creation {
+  margin-bottom: 28px;
+  border-color: #b9a7eb;
+  box-shadow: 0 8px 25px rgba(66, 50, 171, 0.07);
+}
+
+.automatic-creation > .btn { margin-top: 12px; }
+
+.strong-close {
+  color: #4933a1;
+  font-weight: 750;
+}
+
+.generated-cards {
+  margin: 18px 0 22px;
+}
+
 @media (max-width: 800px) {
   .form-choice { align-items: stretch; flex-direction: column; }
   .member-role { width: 100%; }
