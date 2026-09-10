@@ -323,6 +323,11 @@ class Handler(BaseHTTPRequestHandler):
    if member==u['id']: raise Problem('Para evitar perda de acesso, outro administrador deve alterar sua função.',400)
    if not c.execute('SELECT 1 FROM users WHERE id=? AND company_id=?',(member,u['company_id'])).fetchone(): raise Problem('Integrante não encontrado.',404)
    c.execute('UPDATE users SET role=? WHERE id=?',(role,member));return {'ok':True}
+  if path=='/api/issues/delete':
+   if u['role']!='ADMIN': raise Problem('Apenas administradores.',403)
+   issue=b.get('issueId')
+   if not c.execute('SELECT 1 FROM issue_types WHERE id=? AND company_id=? AND active=1',(issue,u['company_id'])).fetchone(): raise Problem('Problema não encontrado.',404)
+   c.execute('UPDATE issue_types SET active=0 WHERE id=?',(issue,));return {'ok':True}
   if path=='/api/forms':
    if u['role']!='ADMIN': raise Problem('Apenas administradores.',403)
    fields=fields_validate(b.get('fields')); id=b.get('issueId'); name=required(b.get('name',''))
