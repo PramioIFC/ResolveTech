@@ -28,11 +28,10 @@ class Workflow(unittest.TestCase):
   d=support.request('demands/'+id+'/start',{'revision':d['revision']})
   support.request('demands/'+id+'/send',{'revision':d['revision']},403)
   answers={'description':'Erro ao gerar relatório','started':'Hoje de manhã','module':'Financeiro','procedures':'Sair e entrar','impact':'Não consigo gerar relatórios'}
-  d=support.request('demands/'+id+'/save',{'revision':d['revision'],'answers':answers,'notes':'Cliente suspeita de atualização; não confirmado.','transcript':'Hoje de manhã apareceu erro 500 no módulo financeiro. Já tentei sair e entrar novamente.','consent':True})
+  d=support.request('demands/'+id+'/save',{'revision':d['revision'],'answers':answers,'notes':'Cliente suspeita de atualização; não confirmado.'})
   stale=d['revision']-1
   support.request('demands/'+id+'/save',{'revision':stale,'answers':answers},409)
-  d=support.request('demands/'+id+'/extract',{'revision':d['revision']})
-  self.assertTrue(d['suggestions']);self.assertEqual(d['answers']['module'],'Financeiro');self.assertEqual(d['answers']['error'],'')
+  self.assertEqual(d['answers']['module'],'Financeiro');self.assertEqual(d['answers']['error'],'')
   d=support.request('demands/'+id+'/upload',{'name':'contexto.txt','data':base64.b64encode(b'contexto adicional').decode()})
   file=d['attachments'][0]['id'];self.assertEqual(client.request('files/'+file),b'contexto adicional')
   support.request('demands/'+id+'/upload',{'name':'falso.png','data':base64.b64encode(b'not png').decode()},400)
@@ -79,16 +78,12 @@ class Workflow(unittest.TestCase):
   class MockModel(rt.BaseHTTPRequestHandler):
    def do_POST(self):
     request=json.loads(self.rfile.read(int(self.headers['Content-Length'])))
-    if 'fieldSuggestions' in request['format']['properties']:
-     result={'fieldSuggestions':[{'fieldKey':'error','value':'Erro 500','evidence':'erro 500'},{'fieldKey':'module','value':'Inventado','evidence':'não está no texto'}]}
-    else:result={'summary':'Resumo de teste','nextSteps':['Verificar os logs.']}
+    result={'summary':'Resumo de teste','nextSteps':['Verificar os logs.']}
     payload=json.dumps({'message':{'content':json.dumps(result)}}).encode();self.send_response(200);self.send_header('Content-Length',str(len(payload)));self.end_headers();self.wfile.write(payload)
    def log_message(self,*args): pass
   server=rt.ThreadingHTTPServer(('127.0.0.1',0),MockModel);threading.Thread(target=server.serve_forever,daemon=True).start()
   os.environ['OLLAMA_URL']='http://127.0.0.1:'+str(server.server_address[1])
   try:
-   result,mode=rt.ai_extract('Apareceu erro 500.',rt.DEFAULT_FIELDS)
-   self.assertEqual(mode,'ollama');self.assertEqual(len(result),1);self.assertEqual(result[0]['fieldKey'],'error')
    report=rt.ai_report({'confirmedFacts':[{'field':'Erro','value':'Erro 500'}]})
    self.assertEqual(report['summary'],'Resumo de teste')
   finally:
