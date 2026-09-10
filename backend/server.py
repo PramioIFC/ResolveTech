@@ -1,5 +1,5 @@
 """ResolveTech local: Python 3.11+, SQLite, sessões HttpOnly e arquivos privados."""
-import base64, hashlib, hmac, json, mimetypes, os, re, secrets, sqlite3, time, urllib.request, urllib.error
+import base64, hashlib, hmac, json, mimetypes, os, re, secrets, sqlite3, time, unicodedata, urllib.request, urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
@@ -330,10 +330,16 @@ class Handler(BaseHTTPRequestHandler):
    c.execute('UPDATE issue_types SET active=0 WHERE id=?',(issue,));return {'ok':True}
   if path=='/api/issues/generate':
    if u['role']!='ADMIN': raise Problem('Apenas administradores.',403)
-   problems=chat.generate_protocol(b.get('protocol',''))
+   existing=[dict(r) for r in c.execute('SELECT name,description FROM issue_types WHERE company_id=? AND active=1',(u['company_id'],))]
+   problems=chat.generate_protocol(b.get('protocol',''),existing)
+   normalize=lambda value:re.sub(r'[^a-z0-9]+',' ',unicodedata.normalize('NFKD',value.casefold()).encode('ascii','ignore').decode()).strip()
+   known={normalize(item['name']) for item in existing};filtered=[];skipped=[]
    for problem in problems:
     problem['name']=required(problem.get('name',''),120);problem['description']=text(problem.get('description',''),1000);problem['guidance']=text(problem.get('guidance',''),10000);problem['fields']=fields_validate(problem.get('fields'))
-   return {'problems':problems}
+    key=normalize(problem['name'])
+    if key in known: skipped.append(problem['name'])
+    else: known.add(key);filtered.append(problem)
+   return {'problems':filtered,'skipped':skipped,'existingPreserved':len(existing)}
   if path=='/api/forms':
    if u['role']!='ADMIN': raise Problem('Apenas administradores.',403)
    fields=fields_validate(b.get('fields')); id=b.get('issueId'); name=required(b.get('name',''))
