@@ -296,13 +296,18 @@ class Handler(BaseHTTPRequestHandler):
  def action(self,c,u,path,b):
   if path=='/api/knowledge':
    if u['role']!='ADMIN':raise Problem('Apenas administradores.',403)
-   name=required(b.get('name',''));description=text(b.get('description',''));guide=text(b.get('guidance',''),10000);issue=b.get('issueId')
+   name=required(b.get('name',''));description=text(b.get('description',''));guide=text(b.get('guidance',''),10000);has_fields='fields' in b;fields=fields_validate(b.get('fields')) if has_fields else None;issue=b.get('issueId')
    if issue:
     if not c.execute('SELECT 1 FROM issue_types WHERE id=? AND company_id=?',(issue,u['company_id'])).fetchone():raise Problem('Problema não encontrado.',404)
     c.execute('UPDATE issue_types SET name=?,description=? WHERE id=?',(name,description,issue))
    else:
-    issue=uid();c.execute('INSERT INTO issue_types(id,company_id,name,description) VALUES(?,?,?,?)',(issue,u['company_id'],name,description));c.execute('INSERT INTO form_versions VALUES(?,?,?,?,?)',(uid(),issue,1,'[]',now()))
-   c.execute('INSERT INTO issue_guidance VALUES(?,?) ON CONFLICT(issue_id) DO UPDATE SET instructions=excluded.instructions',(issue,guide));return {'ok':True}
+    issue=uid();c.execute('INSERT INTO issue_types(id,company_id,name,description) VALUES(?,?,?,?)',(issue,u['company_id'],name,description))
+   version=c.execute('SELECT COALESCE(MAX(version),0) FROM form_versions WHERE issue_id=?',(issue,)).fetchone()[0]
+   if has_fields:
+    version+=1;c.execute('INSERT INTO form_versions VALUES(?,?,?,?,?)',(uid(),issue,version,dumps(fields),now()))
+   elif version==0:
+    version=1;c.execute('INSERT INTO form_versions VALUES(?,?,?,?,?)',(uid(),issue,version,'[]',now()))
+   c.execute('INSERT INTO issue_guidance VALUES(?,?) ON CONFLICT(issue_id) DO UPDATE SET instructions=excluded.instructions',(issue,guide));return {'ok':True,'issueId':issue,'version':version}
   if path=='/api/company':
    if u['role']!='ADMIN': raise Problem('Apenas administradores.',403)
    c.execute('UPDATE companies SET name=?,cnpj=?,city=?,contact=?,hours=?,description=? WHERE id=?',(required(b.get('name','')),text(b.get('cnpj','')),text(b.get('city','')),text(b.get('contact','')),text(b.get('hours','')),text(b.get('description','')),u['company_id'])); return {'ok':True}
