@@ -40,7 +40,18 @@
   background: #efecff;
 }
 
+.form-create-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 800px) {
+  .form-create-actions,
+  .form-create-actions .btn {
+    width: 100%;
+  }
+
   .mobile-menu-trigger {
     position: fixed;
     top: 10px;
