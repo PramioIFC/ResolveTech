@@ -132,34 +132,25 @@
 
 .automatic-creation > .btn { margin-top: 12px; }
 
-.protocol-upload {
-  margin: 0 0 18px;
-  min-height: 112px;
-  justify-content: center;
-  background: #fbfaff;
+.protocol-textarea { position: relative; }
+.protocol-textarea textarea { padding-right: 52px; }
+.protocol-clip {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d9d1e8;
+  border-radius: 8px;
+  background: #fff;
+  color: #7259bf;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(42, 30, 92, .08);
 }
-
-.protocol-upload:hover {
-  border-color: #8f79d7;
-  background: #f7f4ff;
-}
-
-.protocol-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 4px 0 18px;
-  color: #968da6;
-  font-size: 12px;
-}
-
-.protocol-divider::before,
-.protocol-divider::after {
-  content: '';
-  height: 1px;
-  flex: 1;
-  background: #e6e1ee;
-}
+.protocol-clip:hover { background: #f4f0ff; border-color: #9a86d8; }
+.protocol-clip input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
 .strong-close {
   color: #4933a1;
