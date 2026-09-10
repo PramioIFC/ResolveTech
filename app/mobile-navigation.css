@@ -27,6 +27,19 @@
   display: none;
 }
 
+.back-link {
+  margin-left: -9px;
+  padding: 6px 9px;
+  border-radius: 7px;
+  color: #5546d8;
+  font-weight: 650;
+}
+
+.back-link:hover {
+  color: #342399;
+  background: #efecff;
+}
+
 @media (max-width: 800px) {
   .mobile-menu-trigger {
     position: fixed;
