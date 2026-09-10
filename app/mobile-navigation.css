@@ -131,10 +131,13 @@
 
 .automatic-creation {
   margin-bottom: 28px;
+  padding: 18px;
   border-color: #b9a7eb;
   box-shadow: 0 8px 25px rgba(66, 50, 171, 0.07);
 }
 
+.automatic-creation > .panel-title { margin-bottom: 12px; }
+.automatic-creation > .notice { display: none; }
 .automatic-creation > .btn { margin-top: 12px; }
 
 .protocol-textarea { position: relative; }
@@ -163,19 +166,20 @@
 }
 
 .generated-cards {
-  margin: 18px 0 22px;
+  margin: 10px 0 14px;
+  gap: 12px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.generated-card { padding: 16px; }
-.generated-card > svg { margin-bottom: 10px; }
-.generated-card p { margin: 7px 0 12px; }
+.generated-card { padding: 14px; }
+.generated-card > svg { width: 20px; margin-bottom: 6px; }
+.generated-card p { margin: 5px 0 8px; }
 .generated-card h2 { font-size: 18px; }
-.generated-section-title { display: flex; align-items: center; gap: 8px; margin-top: 22px; }
+.generated-section-title { display: flex; align-items: center; gap: 7px; margin-top: 12px; }
 .generated-section-title h3 { margin: 0; }
 .generated-section-title span,.evaluation-badge { font-size: 12px; color: #6b50bd; background: #eee9fb; padding: 3px 8px; border-radius: 999px; }
 .evaluation-badge { display: inline-block; margin-bottom: 12px; }
-.generated-actions { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.generated-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
 .generated-actions .btn { flex: 1; }
 .reject-draft { color: #a43754; font-size: 13px; font-weight: 700; padding: 8px; }
 
