@@ -69,6 +69,9 @@
 }
 
 .expanded-card-top button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   color: #6c5a9b;
   font-size: 13px;
 }
