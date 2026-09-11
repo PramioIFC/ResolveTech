@@ -1,6 +1,25 @@
-# ResolveTech
+<div align="center">
+  <img src="public/favicon.svg" alt="Logo ResolveTech" width="88" />
 
-> Do primeiro contato à solução, nenhuma informação fica pelo caminho.
+  <h1>ResolveTech</h1>
+  <p><strong>Do primeiro contato à solução, nenhuma informação fica pelo caminho.</strong></p>
+  <p>
+    <a href="#avisos-importantes-de-segurança"><img alt="MVP acadêmico" src="https://img.shields.io/badge/status-MVP%20acad%C3%AAmico-6D4AFF?style=for-the-badge" /></a>
+    <a href="#tecnologias"><img alt="React 19" src="https://img.shields.io/badge/React-19-20232A?style=for-the-badge&amp;logo=react" /></a>
+    <a href="#tecnologias"><img alt="Python 3.12" src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&amp;logo=python&amp;logoColor=white" /></a>
+    <a href="#privacidade-e-consentimento"><img alt="Groq" src="https://img.shields.io/badge/IA-Groq-F55036?style=for-the-badge" /></a>
+    <a href="#funcionalidades-do-mvp"><img alt="Cloudflare" src="https://img.shields.io/badge/%C3%81udio-Cloudflare-F38020?style=for-the-badge&amp;logo=cloudflare&amp;logoColor=white" /></a>
+  </p>
+  <p>
+    <a href="#o-problema-que-resolvemos">Visão geral</a> ·
+    <a href="#funcionalidades-do-mvp">Funcionalidades</a> ·
+    <a href="#instalação-local">Instalação</a> ·
+    <a href="#implantação-no-railway">Railway</a> ·
+    <a href="#avisos-importantes-de-segurança">Segurança</a>
+  </p>
+</div>
+
+---
 
 O **ResolveTech** é um MVP de uma central de suporte para empresas de software. Ele conecta cliente, suporte e desenvolvimento em um fluxo único, preservando contexto, organizando a investigação com IA e evitando que o cliente precise explicar o mesmo problema várias vezes.
 
@@ -10,37 +29,43 @@ Em atendimentos tradicionais, informações importantes ficam espalhadas entre c
 
 O ResolveTech concentra tudo em uma demanda rastreável:
 
-1. O cliente relata o problema e conversa com a IA.
-2. Se necessário, solicita suporte humano por chat ou ligação.
-3. O suporte preenche a checklist, define a prioridade e gera um relatório organizado pela IA.
-4. Após revisão humana, a demanda completa é enviada ao desenvolvimento.
-5. O desenvolvedor assume o caso e atualiza o andamento até a conclusão.
+```mermaid
+flowchart LR
+    A[Cliente relata o problema] --> B[IA investiga o contexto]
+    B --> C{Precisa de ajuda humana?}
+    C -->|Sim| D[Suporte por chat ou ligação]
+    C -->|Não| E[Solução orientada]
+    D --> F[Checklist e relatório da IA]
+    F --> G[Revisão humana]
+    G --> H[Desenvolvimento]
+    H --> I[Resolução e conclusão]
+```
 
 ## Funcionalidades do MVP
 
-- Perfis separados de cliente, suporte, desenvolvedor e administrador.
-- Conversa investigativa com IA usando Groq.
-- Atendimento humano pelo próprio chat, sem dependência do Tidio.
-- Chamadas de áudio WebRTC com Cloudflare Realtime SFU.
-- Som de chamada, controle de microfone e encerramento da ligação.
-- Upload de imagens e arquivos no chat e nos formulários.
-- Formulários personalizados para cada tipo de problema.
-- Criação automática de novos problemas e formulários a partir de um protocolo da empresa.
-- Versionamento: demandas antigas preservam o formulário usado na abertura.
-- Checklist, prioridade e relatório técnico revisado pelo suporte.
-- Encaminhamento completo ao desenvolvimento com conversa, formulário, anexos e relatório.
-- Status de desenvolvimento: não resolvida, em espera, em andamento e concluída.
-- Isolamento de dados por empresa e permissões por função.
-- Persistência em SQLite e suporte a volume no Railway.
-- PWA instalável, layout responsivo e restauração da página após atualização.
+| Área | O que o ResolveTech oferece |
+| --- | --- |
+| **Atendimento** | Chat investigativo com IA, suporte humano e histórico contínuo |
+| **Comunicação** | Chat interno, anexos e ligação WebRTC com som de chamada |
+| **Formulários** | Formulários personalizados, criação automática por protocolo e versionamento |
+| **Triagem** | Checklist, prioridade, relatório técnico e revisão humana obrigatória |
+| **Desenvolvimento** | Recebimento apenas de demandas encaminhadas e atualização do andamento |
+| **Gestão** | Perfis distintos, funcionários, catálogo de problemas e isolamento por empresa |
+| **Plataforma** | PWA responsivo, persistência SQLite e implantação com Docker/Railway |
+
+> [!IMPORTANT]
+> Demandas antigas mantêm a versão original do formulário, mesmo depois que a empresa edita ou remove aquele tipo de problema.
 
 ## Tecnologias
 
-- React 19, TypeScript e Vite no frontend.
-- Python 3.12 e SQLite no backend.
-- Groq API com o modelo `openai/gpt-oss-120b`.
-- Cloudflare Realtime SFU para áudio WebRTC.
-- Docker e Railway para implantação.
+| Camada | Tecnologias |
+| --- | --- |
+| Frontend | React 19, TypeScript e Vite |
+| Backend | Python 3.12 |
+| Dados | SQLite com volume persistente |
+| Inteligência artificial | Groq API · `openai/gpt-oss-120b` |
+| Voz | WebRTC · Cloudflare Realtime SFU |
+| Infraestrutura | Docker e Railway |
 
 ## Requisitos
 
@@ -127,7 +152,8 @@ Os testes cobrem autenticação, isolamento entre empresas, chat, permissões, a
 
 ## Avisos importantes de segurança
 
-Este projeto é **somente um MVP acadêmico e uma demonstração**, não um sistema pronto para produção.
+> [!WARNING]
+> Este projeto é **somente um MVP acadêmico e uma demonstração**. Ele não é um sistema pronto para produção.
 
 - A chave Groq é incorporada ao JavaScript e fica visível no navegador. Isso foi aceito apenas para a demonstração. Em produção, as chamadas à IA devem passar por um backend protegido, com autenticação, cotas e limites por cliente.
 - As contas de demonstração têm senha conhecida e devem ser removidas antes de qualquer uso real.
@@ -158,3 +184,10 @@ Dockerfile                 Imagem utilizada no Railway
 ## Estado do projeto
 
 O ResolveTech demonstra a proposta de reduzir retrabalho no suporte técnico por meio de coleta estruturada, continuidade de contexto e uma passagem de responsabilidade clara entre suporte e desenvolvimento. As limitações acima são conhecidas e fazem parte do escopo reduzido do MVP.
+
+---
+
+<div align="center">
+  <strong>ResolveTech · Hackathon IFC Concórdia</strong><br />
+  Informação organizada. Responsabilidade clara.
+</div>
